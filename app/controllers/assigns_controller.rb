@@ -1,5 +1,6 @@
 class AssignsController < ApplicationController
   before_action :authenticate_user!
+  before_action :check_this_user_or_owner, only: %i[assign_destroy]
 
   def create
     team = Team.friendly.find(params[:team_id])
@@ -46,4 +47,12 @@ class AssignsController < ApplicationController
     another_team = Assign.find_by(user_id: assigned_user.id).team
     change_keep_team(assigned_user, another_team) if assigned_user.keep_team_id == assign.team_id
   end
+
+  def check_this_user_or_owner
+    unless (assign.user == current_user) or (assign.team.owner == current_user)
+      flash[:alert] = 'アサインの削除はオーナーか該当ユーザーしかできません'
+      redirect_to team_assigns_path
+    end
+  end
+
 end
